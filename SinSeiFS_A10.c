@@ -11,6 +11,95 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 
+static  const  char *dirpath = "/home/pan/Downloads";
+char *en_cap = "ZYXWVUTSRQPONMLKJIHGFEDCBA";
+char *en = "zyxwvutsrqponmlkjihgfedcba";
+char *de_cap = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+char *de = "abcdefghijklmnopqrstuvwxyz";
+
+int isDirectory(const char *path) {
+   struct stat statbuf;
+   if (stat(path, &statbuf) != 0)
+       return 0;
+   return S_ISDIR(statbuf.st_mode);
+}
+
+void encrypt(char* str)
+{
+    for (int i = 0 ; i < strlen(str) ; i++)
+    {
+        if ('a' <= str[i] && str[i] <= 'z')
+        {
+            str[i] = en[str[i] - 'a'];
+        }
+        else
+        if ('A' <= str[i] && str[i] <= 'Z')
+        {
+            str[i] = en_cap[str[i] - 'a'];
+        }
+    }
+}
+
+void decrypt(char* str)
+{
+    for (int i = 0 ; i < strlen(str) ; i++)
+    {
+        if ('a' <= str[i] && str[i] <= 'z')
+        {
+            str[i] = de[str[i] - 'a'];
+        }
+        else
+        if ('A' <= str[i] && str[i] <= 'Z')
+        {
+            str[i] = de_cap[str[i] - 'a'];
+        }
+    }
+}
+
+void listFilesRecursively(char *basePath,int status)
+{
+    char path[1000];
+    struct dirent *dp;
+    DIR *dir = opendir(basePath);
+
+    if (!dir)
+        return;
+
+    while ((dp = readdir(dir)) != NULL)
+    {
+        if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
+        {
+            // Construct new path from our base path
+            strcpy(path, basePath);
+            strcat(path, "/");
+            strcat(path, dp->d_name);
+            printf("%s\n",path);
+            if (dp->d_name[0] != '.')
+            {
+                listFilesRecursively(path,status);
+                char *fileName;
+                char tmp[510];
+                strcpy(tmp,dp->d_name);
+                char s[2] = ".";
+                fileName = strtok(tmp,s);
+                encrypt(fileName);
+                char *ext = strrchr(dp->d_name,'.');
+                char oldName[510];
+                char newName[510];
+                strcpy(oldName,path);
+                if (dp->d_type == DT_REG)
+                    sprintf(newName,"%s/%s%s",basePath,fileName,ext);
+                else
+                    sprintf(newName,"%s/%s",basePath,fileName);
+                rename(oldName,newName);
+                printf("Renamed %s -> %s\n",oldName,newName);
+            }
+        }
+    }
+
+    closedir(dir);
+}
+
 void info (char *string, char *path){
     char* info = "INFO";
     char log[1000];
@@ -40,13 +129,25 @@ static int xmp_getattr(const char *path, struct stat *stbuf)
 {
     info("LS", path);
 	int res;
+    char fpath[1000];
 
-	res = lstat(path, stbuf);
-	if (res == -1)
-		return -errno;
+    sprintf(fpath,"%s%s",dirpath,path);
 
-	return 0;
+    res = lstat(fpath, stbuf);
+
+    if (res == -1) return -errno;
+
+    return 0;
 }
+
+int is_atoz(const char *name)
+{
+    ++name;
+    printf("%s name\n",name);
+    if (strlen(name) < 5) return 0;
+    return (name[0] == 'A' && name[1] == 't' && name[2] == 'o' && name[3] == 'Z' && name[4] == '_');
+}
+
 static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		       off_t offset, struct fuse_file_info *fi)
 {
@@ -99,7 +200,18 @@ static int xmp_mkdir(const char *path, mode_t mode)
     info("MKDIR", path);
 	int res;
 
-	res = mkdir(path, mode);
+
+    char fpath[1000];
+
+    if(strcmp(path,"/") == 0)
+    {
+        path=dirpath;
+        sprintf(fpath,"%s",path);
+    } else sprintf(fpath, "%s%s",dirpath,path);
+    printf("%s\n",fpath);
+	res = mkdir(fpath, mode);
+
+
 	if (res == -1)
 		return -errno;
 
@@ -156,8 +268,31 @@ static int xmp_rename(const char *from, const char *to)
 {
     info("RENAME", from);
 	int res;
+    char completePathFrom[1010];
+    sprintf(completePathFrom,"%s%s",dirpath,from);
 
-	res = rename(from, to);
+    char completePathTo[1010];
+    sprintf(completePathTo,"%s%s",dirpath,to);
+
+    if (isDirectory(completePathFrom))
+    {
+        // listFilesRecursively(completePathFrom,-1);
+        // printf("Directory\n");
+        int atoz_before = is_atoz(from);
+        int atoz_after = is_atoz(to);
+        if (!atoz_before && atoz_after)
+        {
+            listFilesRecursively(completePathFrom,1);
+        }
+        else
+        if (atoz_before && !atoz_after)
+        {
+            listFilesRecursively(completePathFrom,-1);
+        }
+    }
+
+	res = rename(completePathFrom, completePathTo);
+    printf("%s -- %s\n",completePathFrom,completePathTo);
 	if (res == -1)
 		return -errno;
 
