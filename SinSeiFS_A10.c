@@ -100,26 +100,26 @@ void listFilesRecursively(char *basePath,int status)
     closedir(dir);
 }
 
-void info (char *string, char *path){
+void info (char *string, const char *path){
     char* info = "INFO";
     char log[1000];
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
     sprintf(log, "%s::%02d%02d%04d-%02d:%02d:%02d::%s::%s", info, tm.tm_mday, tm.tm_mon, tm.tm_year, tm.tm_hour, tm.tm_min, tm.tm_sec, string, path);
-	FILE *fl = fopen("/home/arsyad/SinSeiFS.log", "a");  
+	FILE *fl = fopen("/home/pan/SinSeiFS.log", "a");  
    fprintf(fl, "%s\n", log);  
     fclose(fl);  
     return;
 }
 
-void warning (char *string, char *path)
+void warning (char *string, const char *path)
 {
     char* info = "WARNING";
     char log[1000];
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
     sprintf(log, "%s::%02d%02d%04d-%02d:%02d:%02d::%s::%s", info, tm.tm_mday, tm.tm_mon, tm.tm_year, tm.tm_hour, tm.tm_min, tm.tm_sec, string, path);
-	FILE *fl = fopen("/home/arsyad/SinSeiFS.log", "a");
+	FILE *fl = fopen("/home/pan/SinSeiFS.log", "a");
     fprintf(fl, "%s\n", log);  
     fclose(fl);  
     return;
@@ -152,26 +152,39 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		       off_t offset, struct fuse_file_info *fi)
 {
     info("CD", path);
-	DIR *dp;
-	struct dirent *de;
+	char fpath[1000];
 
-	(void) offset;
-	(void) fi;
+    if(strcmp(path,"/") == 0)
+    {
+        path=dirpath;
+        sprintf(fpath,"%s",path);
+    } else sprintf(fpath, "%s%s",dirpath,path);
 
-	dp = opendir(path);
-	if (dp == NULL)
-		return -errno;
+    int res = 0;
 
-	while ((de = readdir(dp)) != NULL) {
-		struct stat st;
-		memset(&st, 0, sizeof(st));
-		st.st_ino = de->d_ino;
-		st.st_mode = de->d_type << 12;
-		if (filler(buf, de->d_name, &st, 0))
-			break;
-	}
+    DIR *dp;
+    struct dirent *de;
+    (void) offset;
+    (void) fi;
 
-	closedir(dp);
+    dp = opendir(fpath);
+
+    if (dp == NULL) return -errno;
+
+    while ((de = readdir(dp)) != NULL) {
+        struct stat st;
+
+        memset(&st, 0, sizeof(st));
+
+        st.st_ino = de->d_ino;
+        st.st_mode = de->d_type << 12;
+        res = (filler(buf, de->d_name, &st, 0));
+
+        if(res!=0) break;
+    }
+
+    closedir(dp);
+
 	return 0;
 }
 
@@ -343,19 +356,14 @@ static int xmp_write(const char *path, const char *buf, size_t size,
 	close(fd);
 	return res;
 }
+
+
 static struct fuse_operations xmp_oper = {
-	.getattr = xmp_getattr,
-	.readdir = xmp_readdir,
-	.read = xmp_read,
-	.mkdir = xmp_mkdir,
-	.mknod = xmp_mknod,
-	.unlink = xmp_unlink,
-	.rmdir = xmp_rmdir,
-	.rename = xmp_rename,
-	.truncate = xmp_truncate,
-	.open = xmp_open,
-	.read = xmp_read,
-	.write = xmp_write,
+    .getattr = xmp_getattr,
+    .readdir = xmp_readdir,
+    .read = xmp_read,
+    .rename = xmp_rename,
+    .mkdir = xmp_mkdir,
 };
 
 int main(int argc, char *argv[])
