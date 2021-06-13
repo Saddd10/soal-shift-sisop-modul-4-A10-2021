@@ -2,6 +2,7 @@
 
 ## Soal 1
 Di suatu jurusan, terdapat admin lab baru yang super duper gabut, ia bernama Sin. Sin baru menjadi admin di lab tersebut selama 1 bulan. Selama sebulan tersebut ia bertemu orang-orang hebat di lab tersebut, salah satunya yaitu Sei. Sei dan Sin akhirnya berteman baik. Karena belakangan ini sedang ramai tentang kasus keamanan data, mereka berniat membuat filesystem dengan metode encode yang mutakhir. Berikut adalah filesystem rancangan Sin dan Sei : 
+
 ![Soal1](https://user-images.githubusercontent.com/73766214/121810713-1bdeb500-cc8c-11eb-8d65-1f0d1ee9103d.png)
 
 
