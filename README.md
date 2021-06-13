@@ -2,6 +2,8 @@
 
 ## Soal 1
 Di suatu jurusan, terdapat admin lab baru yang super duper gabut, ia bernama Sin. Sin baru menjadi admin di lab tersebut selama 1 bulan. Selama sebulan tersebut ia bertemu orang-orang hebat di lab tersebut, salah satunya yaitu Sei. Sei dan Sin akhirnya berteman baik. Karena belakangan ini sedang ramai tentang kasus keamanan data, mereka berniat membuat filesystem dengan metode encode yang mutakhir. Berikut adalah filesystem rancangan Sin dan Sei : 
+![Soal1](https://user-images.githubusercontent.com/73766214/121810713-1bdeb500-cc8c-11eb-8d65-1f0d1ee9103d.png)
+
 
 #### Solusi
 ##### A dan B. Jika sebuah direktori dibuat dengan awalan “AtoZ_”, maka direktori tersebut akan menjadi direktori ter-encode. Jika sebuah direktori di-rename dengan awalan “AtoZ_”, maka direktori tersebut akan menjadi direktori ter-encode.
@@ -138,11 +140,16 @@ static int xmp_rename(const char *from, const char *to)
 	return 0;
 }
 ```
-Output :
+Output folder berawalan "AtoZ_":
+![Soal1_1](https://user-images.githubusercontent.com/73766214/121810574-a8d53e80-cc8b-11eb-94d8-cc6d90090a1c.png)
+![Soal1_2](https://user-images.githubusercontent.com/73766214/121810580-ad99f280-cc8b-11eb-9244-17ac899b9eb9.png)
+
+Output folder tidak berawalan "AtoZ_":
+![Soal1_3](https://user-images.githubusercontent.com/73766214/121810678-f94c9c00-cc8b-11eb-94cb-89fdc6345471.png)
+![Soal1_4](https://user-images.githubusercontent.com/73766214/121810680-fc478c80-cc8b-11eb-9f1c-7e3029fb7aa0.png)
 
 
 #### Kendala :
-- 
 
 ## Soal 4
 Untuk memudahkan dalam memonitor kegiatan pada filesystem mereka Sin dan Sei membuat sebuah log system dengan spesifikasi sebagai berikut.
